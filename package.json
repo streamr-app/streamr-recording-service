@@ -1,0 +1,25 @@
+{
+  "name": "streamr-recording-service",
+  "version": "0.1.0",
+  "description": "A microservice that accepts binary audio streams from Streamr's web frontend and uploads them to S3.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-app/streamr-recording-service.git"
+  },
+  "author": "Steven Petryk <me@stevenpetryk.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/streamr-app/streamr-recording-service/issues"
+  },
+  "homepage": "https://github.com/streamr-app/streamr-recording-service#readme",
+  "dependencies": {
+    "aws-sdk": "^2.40.0",
+    "binaryjs": "^0.2.1",
+    "wav": "^1.0.1"
+  }
+}

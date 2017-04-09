@@ -20,6 +20,7 @@
   "dependencies": {
     "aws-sdk": "^2.40.0",
     "binaryjs": "^0.2.1",
+    "restler": "^3.4.0",
     "wav": "^1.0.1"
   }
 }

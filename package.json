@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "A microservice that accepts binary audio streams from Streamr's web frontend and uploads them to S3.",
   "main": "index.js",
+  "engines": {
+    "node": "6.2.0"
+  },
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"

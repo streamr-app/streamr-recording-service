@@ -1,5 +1,7 @@
 const restler = require('restler')
 
+const express = require('express')
+
 const AWS = require('aws-sdk')
 const s3 = new AWS.S3({ region: process.env.AWS_REGION })
 const transcoder = new AWS.ElasticTranscoder({ region: process.env.AWS_REGION })
@@ -8,7 +10,10 @@ const stream = require('stream')
 const binaryServer = require('binaryjs').BinaryServer
 const wav = require('wav')
 
-const server = binaryServer({ port: 9001 })
+const PORT = process.env.PORT || 3000
+const server = express().listen(PORT)
+
+const socketServer = binaryServer({ server })
 
 function uploaderFactory (streamId, token) {
   var pass = new stream.PassThrough()
@@ -91,7 +96,7 @@ function doUpdate (streamId, key, token) {
     .on('fail', (data, response) => console.log(data))
 }
 
-server.on('connection', (client) => {
+socketServer.on('connection', (client) => {
   var uploader = null
   var wavWriter = null
 

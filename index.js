@@ -52,7 +52,26 @@ function doTranscode (inputKey, streamId, hash, token) {
       return
     }
 
-    doUpdate(streamId, `streams/${streamId}/${newKey}`, token)
+    waitForJob(data.Job.Id)
+      .then(() => doUpdate(streamId, `streams/${streamId}/${newKey}`, token))
+  })
+}
+
+function waitForJob (jobId) {
+  return new Promise((resolve, reject) => {
+    transcoder.readJob({ Id: jobId }, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        if (data.Job.Status === 'Complete') {
+          resolve()
+        } else if (data.Job.Status === 'Error') {
+          reject(data)
+        } else {
+          setTimeout(() => resolve(waitForJob(jobId)), 1000)
+        }
+      }
+    })
   })
 }
 
@@ -68,8 +87,8 @@ function doUpdate (streamId, key, token) {
     payload,
     { accessToken: token }
   )
-    .on('success', (data, response) => console.log(data, response))
-    .on('fail', (data, response) => console.log(data, response))
+    .on('success', (data, response) => console.log(data))
+    .on('fail', (data, response) => console.log(data))
 }
 
 server.on('connection', (client) => {

@@ -24,6 +24,7 @@ function uploaderFactory (streamId, token) {
   const options = { partSize: 5 * 1024 * 1024, queueSize: 3, computeChecksums: true }
   s3.upload(params, options, (err, data) => {
     if (!err) {
+      console.log(`Beginning transcoding for stream ${streamId}`)
       doTranscode(key, streamId, JSON.parse(data.ETag), token)
     }
   })
@@ -59,6 +60,7 @@ function doTranscode (inputKey, streamId, hash, token) {
 
     waitForJob(data.Job.Id)
       .then(() => doUpdate(streamId, `streams/${streamId}/${newKey}`, token))
+      .catch((reason) => console.error(reason))
   })
 }
 
@@ -69,8 +71,10 @@ function waitForJob (jobId) {
         reject(err)
       } else {
         if (data.Job.Status === 'Complete') {
+          console.log('Done transcoding')
           resolve()
         } else if (data.Job.Status === 'Error') {
+          console.log('Error while transcoding')
           reject(data)
         } else {
           setTimeout(() => resolve(waitForJob(jobId)), 1000)
@@ -87,20 +91,25 @@ function doUpdate (streamId, key, token) {
     }
   }
 
+  console.log(`Beginning update of stream ${streamId}...`)
+
   restler.patchJson(
     `${process.env.STREAMR_API_ENDPOINT}/streams/${streamId}`,
     payload,
     { accessToken: token }
   )
-    .on('success', (data, response) => console.log(data))
-    .on('fail', (data, response) => console.log(data))
+    .on('success', (data, response) => console.log(`Updated stream ${streamId}\n`))
+    .on('fail', (data, response) => console.error(data))
 }
 
 socketServer.on('connection', (client) => {
   var uploader = null
   var wavWriter = null
+  var interval = null
 
   client.on('stream', (bitStream, meta) => {
+    console.log('Stream received')
+
     const streamId = meta.streamId
 
     uploader = uploader || uploaderFactory(streamId, meta.authToken)
@@ -113,10 +122,18 @@ socketServer.on('connection', (client) => {
     bitStream.pipe(wavWriter).pipe(uploader)
   })
 
+  interval = setInterval(() => client._socket.ping(), 5000)
+
+  client.on('error', (error) => {
+    console.error(error)
+  })
+
   client.on('close', () => {
+    console.log('Client closed connection')
+    clearInterval(interval)
+
     if (wavWriter != null) {
       wavWriter.end()
-      uploader.end()
     }
   })
 })
